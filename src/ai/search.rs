@@ -19,7 +19,7 @@ pub fn search_path(rapier_ctx: &RapierContext, from: Vec2, to: Vec2) -> Option<V
         }
         closed.insert(node, parent);
 
-        if node.distance(to) < 0.1 {
+        if node.distance(to) <= 0.8 {
             return Some(build_path(node, from, closed));
         }
 
@@ -58,7 +58,7 @@ fn neighboors(node: Vec2, rapier_ctx: &RapierContext) -> Vec<Vec2> {
         .into_iter()
         .filter(|canditate| {
             let mut free = true;
-            rapier_ctx.intersections_with_point(*canditate, QueryFilter::default(), |_| {
+            rapier_ctx.intersections_with_point(*canditate, QueryFilter::only_fixed(), |_| {
                 free = false;
                 false
             });

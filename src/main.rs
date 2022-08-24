@@ -5,6 +5,7 @@ mod controls;
 mod person;
 mod player;
 mod road;
+mod spawning;
 
 use ai::Target;
 use bevy::prelude::*;
@@ -25,6 +26,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(3.0))
         //.add_plugin(RapierDebugRenderPlugin::default())
+        //.add_plugin(EditorPlugin)
         .add_plugin(ShapePlugin)
         .insert_resource(RapierConfiguration {
             gravity: Vec2::ZERO,
@@ -32,6 +34,7 @@ fn main() {
         })
         .add_startup_system(camera::setup)
         .add_startup_system(game_setup)
+        .add_startup_system(spawning::setup)
         .add_system(controls::player_movement)
         .add_system(controls::camera_zoom)
         .add_system(person::movement)
@@ -43,6 +46,7 @@ fn main() {
         .add_system(ai::person_movement.after(SystemLabels::PathUpdate))
         .add_system_to_stage(CoreStage::PostUpdate, ai::build_path)
         //.add_system(ai::path_debug::path_debug)
+        .add_system(spawning::spawn_person)
         .run();
 }
 
@@ -55,7 +59,7 @@ fn game_setup(
         &mut commands,
         &mut meshes,
         &mut materials,
-        Vec2::new(-80.0, 70.0),
+        Vec2::new(0.0, 0.0),
     );
     commands.entity(person_entity).insert(Player);
 
@@ -158,8 +162,8 @@ pub fn add_people(
     meshes: &mut Assets<Mesh>,
     materials: &mut Assets<ColorMaterial>,
 ) {
-    let person_entity = add_person(commands, meshes, materials, Vec2::new(-80.0, 77.0));
+    let person_entity = add_person(commands, meshes, materials, Vec2::new(62.5, 77.0));
     commands
         .entity(person_entity)
-        .insert(Target(Vec2::new(80.0, -80.0)));
+        .insert(Target(Vec2::new(-77.0, 62.5)));
 }

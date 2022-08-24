@@ -81,7 +81,6 @@ fn path_simplification(rapier_ctx: &RapierContext, path: Vec<Vec2>) -> Vec<Vec2>
     let mut i = 1;
     while i < path.len() - 1 {
         if !can_see(rapier_ctx, *simplified_path.last().unwrap(), path[i + 1]) {
-            info!("Adding {:?}", path[i]);
             simplified_path.push(path[i])
         } else {
         }
@@ -95,6 +94,12 @@ fn path_simplification(rapier_ctx: &RapierContext, path: Vec<Vec2>) -> Vec<Vec2>
 fn can_see(rapier_ctx: &RapierContext, from: Vec2, to: Vec2) -> bool {
     let dir = (to - from).normalize();
     rapier_ctx
-        .cast_ray(from, dir, from.distance(to), true, QueryFilter::default())
+        .cast_ray(
+            from,
+            dir,
+            from.distance(to),
+            true,
+            QueryFilter::only_fixed(),
+        )
         .is_none()
 }

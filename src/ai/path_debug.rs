@@ -5,6 +5,7 @@ use bevy_prototype_lyon::prelude::*;
 #[derive(Component, Deref)]
 pub struct PathDebug(Entity);
 
+#[allow(dead_code)]
 pub fn path_debug(
     mut commands: Commands,
     changed_paths: Query<(Entity, &Path, Option<&PathDebug>), Changed<Path>>,

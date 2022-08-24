@@ -1,4 +1,4 @@
-use crate::{person::*, player::Player};
+use crate::{camera::GameCamera, person::*, player::Player};
 use bevy::prelude::*;
 
 const UP_KEY: KeyCode = KeyCode::Comma;
@@ -23,7 +23,7 @@ pub fn player_movement(
 
 pub fn camera_zoom(
     keyboard: Res<Input<KeyCode>>,
-    mut camera: Query<&mut OrthographicProjection, With<Camera>>,
+    mut camera: Query<&mut OrthographicProjection, With<GameCamera>>,
 ) {
     let mut projection = camera.single_mut();
     if keyboard.just_pressed(ZOOM_OUT) {

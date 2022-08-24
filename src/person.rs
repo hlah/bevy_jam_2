@@ -35,7 +35,7 @@ pub fn add_person(
         .insert_bundle(MaterialMesh2dBundle {
             mesh: meshes.add(Mesh::from(shape::Quad::default())).into(),
             material: materials.add(ColorMaterial::from(Color::FUCHSIA)),
-            transform: Transform::from_xyz(pos.x, pos.y, 0.0),
+            transform: Transform::from_xyz(pos.x, pos.y, 20.0),
             ..default()
         })
         .id()

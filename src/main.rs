@@ -1,3 +1,4 @@
+mod ai;
 mod building;
 mod camera;
 mod controls;
@@ -5,18 +6,25 @@ mod person;
 mod player;
 mod road;
 
+use ai::Target;
 use bevy::prelude::*;
-use bevy_prototype_lyon::prelude::*;
+use bevy_prototype_lyon::prelude::ShapePlugin;
 use bevy_rapier2d::prelude::*;
 use building::*;
 use person::add_person;
 use player::Player;
 use road::*;
 
+#[derive(SystemLabel)]
+enum SystemLabels {
+    PathUpdate,
+}
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(3.0))
+        //.add_plugin(RapierDebugRenderPlugin::default())
         .add_plugin(ShapePlugin)
         .insert_resource(RapierConfiguration {
             gravity: Vec2::ZERO,
@@ -31,6 +39,10 @@ fn main() {
         .add_system(road::on_add_road)
         .add_system(road::on_add_road_node)
         .add_system(building::on_add_building)
+        .add_system(ai::path_update.label(SystemLabels::PathUpdate))
+        .add_system(ai::person_movement.after(SystemLabels::PathUpdate))
+        .add_system_to_stage(CoreStage::PostUpdate, ai::build_path)
+        .add_system(ai::path_debug::path_debug)
         .run();
 }
 
@@ -43,10 +55,16 @@ fn game_setup(
         &mut commands,
         &mut meshes,
         &mut materials,
-        Vec2::new(-80.0, 0.0),
+        Vec2::new(-80.0, 70.0),
     );
     commands.entity(person_entity).insert(Player);
 
+    add_roads(&mut commands);
+    add_buildings(&mut commands);
+    add_people(&mut commands, &mut meshes, &mut materials);
+}
+
+pub fn add_roads(commands: &mut Commands) {
     let node_a = commands
         .spawn()
         .insert(RoadNode {
@@ -88,7 +106,9 @@ fn game_setup(
         from: node_d,
         to: node_a,
     });
+}
 
+pub fn add_buildings(commands: &mut Commands) {
     commands.spawn().insert(Building {
         pos: Vec2::new(-50.0, -50.0),
         size: Vec2::new(50.0, 50.0),
@@ -123,4 +143,15 @@ fn game_setup(
         pos: Vec2::new(0.0, -50.0),
         size: Vec2::new(30.0, 50.0),
     });
+}
+
+pub fn add_people(
+    commands: &mut Commands,
+    meshes: &mut Assets<Mesh>,
+    materials: &mut Assets<ColorMaterial>,
+) {
+    let person_entity = add_person(commands, meshes, materials, Vec2::new(-80.0, 77.0));
+    commands
+        .entity(person_entity)
+        .insert(Target(Vec2::new(80.0, -80.0)));
 }

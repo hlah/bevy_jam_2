@@ -6,7 +6,7 @@ pub struct Person {
     pub state: PersonState,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub enum PersonState {
     #[default]
     Standing,

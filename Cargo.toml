@@ -8,6 +8,8 @@ license = "MIT OR Apache-2.0"
 bevy = "0.8"
 bevy_prototype_lyon = "0.6.0"
 bevy_rapier2d = "0.16.1"
+priority-queue = "1.2.3"
+ordered-float = "3"
 
 [profile.dev.package."*"]
 opt-level = 3

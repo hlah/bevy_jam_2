@@ -42,7 +42,7 @@ fn main() {
         .add_system(ai::path_update.label(SystemLabels::PathUpdate))
         .add_system(ai::person_movement.after(SystemLabels::PathUpdate))
         .add_system_to_stage(CoreStage::PostUpdate, ai::build_path)
-        .add_system(ai::path_debug::path_debug)
+        //.add_system(ai::path_debug::path_debug)
         .run();
 }
 
@@ -112,36 +112,44 @@ pub fn add_buildings(commands: &mut Commands) {
     commands.spawn().insert(Building {
         pos: Vec2::new(-50.0, -50.0),
         size: Vec2::new(50.0, 50.0),
+        doors: vec![Door::new(Side::Left, 0.0)],
     });
     commands.spawn().insert(Building {
         pos: Vec2::new(50.0, -50.0),
         size: Vec2::new(50.0, 50.0),
+        doors: vec![Door::new(Side::Bottom, 0.0)],
     });
     commands.spawn().insert(Building {
         pos: Vec2::new(50.0, 50.0),
         size: Vec2::new(50.0, 50.0),
+        doors: vec![Door::new(Side::Top, 0.5)],
     });
     commands.spawn().insert(Building {
         pos: Vec2::new(-50.0, 50.0),
         size: Vec2::new(50.0, 50.0),
+        doors: vec![Door::new(Side::Left, 0.5)],
     });
 
     commands.spawn().insert(Building {
         pos: Vec2::new(-50.0, 0.0),
         size: Vec2::new(50.0, 30.0),
+        doors: vec![Door::new(Side::Right, 0.0)],
     });
     commands.spawn().insert(Building {
         pos: Vec2::new(50.0, 0.0),
         size: Vec2::new(50.0, 30.0),
+        doors: vec![Door::new(Side::Right, 0.0)],
     });
 
     commands.spawn().insert(Building {
         pos: Vec2::new(0.0, 50.0),
         size: Vec2::new(30.0, 50.0),
+        doors: vec![Door::new(Side::Bottom, 0.5)],
     });
     commands.spawn().insert(Building {
         pos: Vec2::new(0.0, -50.0),
         size: Vec2::new(30.0, 50.0),
+        doors: vec![],
     });
 }
 

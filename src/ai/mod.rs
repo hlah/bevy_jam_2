@@ -126,11 +126,12 @@ fn path_simplification(rapier_ctx: &RapierContext, path: Vec<Vec2>) -> Vec<Vec2>
 fn can_see(rapier_ctx: &RapierContext, from: Vec2, to: Vec2) -> bool {
     let dir = (to - from).normalize();
     rapier_ctx
-        .cast_ray(
+        .cast_shape(
             from,
+            0.0,
             dir,
+            &Collider::cuboid(0.5, 0.5),
             from.distance(to),
-            true,
             QueryFilter::only_fixed(),
         )
         .is_none()

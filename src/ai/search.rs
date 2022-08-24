@@ -58,10 +58,16 @@ fn neighboors(node: Vec2, rapier_ctx: &RapierContext) -> Vec<Vec2> {
         .into_iter()
         .filter(|canditate| {
             let mut free = true;
-            rapier_ctx.intersections_with_point(*canditate, QueryFilter::only_fixed(), |_| {
-                free = false;
-                false
-            });
+            rapier_ctx.intersections_with_shape(
+                *canditate,
+                0.0,
+                &Collider::cuboid(0.5, 0.5),
+                QueryFilter::only_fixed(),
+                |_| {
+                    free = false;
+                    false
+                },
+            );
             free
         })
         .collect()

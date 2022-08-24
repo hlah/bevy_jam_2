@@ -11,6 +11,7 @@ bevy_rapier2d = "0.16.1"
 priority-queue = "1.2.3"
 ordered-float = "3"
 rand = "0.8.5"
+itertools = "0.10.3"
 
 [profile.dev.package."*"]
 opt-level = 3

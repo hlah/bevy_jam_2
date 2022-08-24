@@ -26,7 +26,6 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(3.0))
         //.add_plugin(RapierDebugRenderPlugin::default())
-        //.add_plugin(EditorPlugin)
         .add_plugin(ShapePlugin)
         .insert_resource(RapierConfiguration {
             gravity: Vec2::ZERO,
@@ -43,7 +42,7 @@ fn main() {
         .add_system(road::on_add_road_node)
         .add_system(building::on_add_building)
         .add_system(ai::path_update.label(SystemLabels::PathUpdate))
-        .add_system(ai::person_movement.after(SystemLabels::PathUpdate))
+        .add_system(ai::person_actions.after(SystemLabels::PathUpdate))
         .add_system_to_stage(CoreStage::PostUpdate, ai::build_path)
         //.add_system(ai::path_debug::path_debug)
         .add_system(spawning::spawn_person)

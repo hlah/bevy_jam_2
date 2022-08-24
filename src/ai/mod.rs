@@ -6,18 +6,24 @@ use bevy::{math::Vec3Swizzles, prelude::*};
 use bevy_rapier2d::prelude::*;
 
 #[derive(Component, Debug)]
-pub struct Path {
-    steps: Vec<Vec2>,
+pub struct Actions {
+    steps: Vec<Action>,
     current_step: usize,
 }
 
-impl Path {
-    fn current(&self) -> Option<&Vec2> {
+#[derive(Debug)]
+pub enum Action {
+    GoTo(Vec2),
+    Despawn,
+}
+
+impl Actions {
+    fn current(&self) -> Option<&Action> {
         self.steps.get(self.current_step)
     }
 
-    fn remaining(&self) -> &[Vec2] {
-        &self.steps[self.current_step..]
+    fn remaining(&self) -> impl Iterator<Item = &Action> {
+        self.steps.iter().skip(self.current_step)
     }
 
     fn next(&mut self) {
@@ -25,8 +31,8 @@ impl Path {
     }
 }
 
-impl From<Vec<Vec2>> for Path {
-    fn from(steps: Vec<Vec2>) -> Self {
+impl From<Vec<Action>> for Actions {
+    fn from(steps: Vec<Action>) -> Self {
         Self {
             steps,
             current_step: 0,
@@ -37,22 +43,37 @@ impl From<Vec<Vec2>> for Path {
 #[derive(Component, Deref)]
 pub struct Target(pub Vec2);
 
-pub fn person_movement(mut people: Query<(&mut Person, &Transform, &Path)>) {
-    for (mut person, person_transform, path) in people.iter_mut() {
-        if let Some(target) = path.current() {
-            let dir = (*target - person_transform.translation.xy()).normalize_or_zero();
-            person.state = PersonState::Walking(dir);
+pub fn person_actions(
+    mut commands: Commands,
+    mut people: Query<(Entity, &mut Person, &Transform, &Actions)>,
+) {
+    for (person_entity, mut person, person_transform, actions) in people.iter_mut() {
+        if let Some(action) = actions.current() {
+            match action {
+                Action::GoTo(target) => {
+                    let dir = (*target - person_transform.translation.xy()).normalize_or_zero();
+                    person.state = PersonState::Walking(dir);
+                }
+                Action::Despawn => {
+                    commands.entity(person_entity).despawn();
+                }
+            }
         } else {
             person.state = PersonState::Standing;
         }
     }
 }
 
-pub fn path_update(mut paths: Query<(&Transform, &mut Path)>) {
+pub fn path_update(mut paths: Query<(&Transform, &mut Actions)>) {
     for (person_transform, mut path) in paths.iter_mut() {
-        let finished_step = if let Some(target) = path.current() {
-            let distance = target.distance(person_transform.translation.xy());
-            distance < 0.5
+        let finished_step = if let Some(step) = path.current() {
+            match step {
+                Action::GoTo(target) => {
+                    let distance = target.distance(person_transform.translation.xy());
+                    distance < 0.5
+                }
+                _ => false,
+            }
         } else {
             false
         };
@@ -68,11 +89,22 @@ pub fn build_path(
     with_target: Query<(Entity, &Transform, &Target)>,
 ) {
     for (entity, transform, target) in with_target.iter() {
+        let mut actions = vec![];
         let from = transform.translation.xy();
         let raw_path = search::search_path(&rapier_ctx, from, **target).unwrap();
-        let path = Path::from(path_simplification(&rapier_ctx, raw_path));
-        info!("{:?} path: {:?}", entity, path);
-        commands.entity(entity).insert(path).remove::<Target>();
+        let simplified_path = path_simplification(&rapier_ctx, raw_path);
+        actions.extend(
+            simplified_path
+                .into_iter()
+                .map(|target| Action::GoTo(target)),
+        );
+        actions.push(Action::Despawn);
+
+        info!("{:?} actions: {:?}", entity, actions);
+        commands
+            .entity(entity)
+            .insert(Actions::from(actions))
+            .remove::<Target>();
     }
 }
 

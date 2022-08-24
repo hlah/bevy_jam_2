@@ -88,7 +88,6 @@ fn draw_doors(commands: &mut Commands, building_entity: Entity, building: &Build
     for door in &building.doors {
         let pos = door.side.get_pos(building.size, door.pos);
         let offset_dir = door.side.get_offet_dir();
-        info!("Putting door at {:?}", pos);
         commands.entity(building_entity).add_children(|children| {
             children
                 .spawn_bundle(GeometryBuilder::build_as(

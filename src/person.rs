@@ -47,10 +47,10 @@ pub fn movement(mut persons: Query<(&mut ExternalImpulse, &Velocity, &Person)>) 
             PersonState::Walking(dir) => {
                 let current_dir = velocity.linvel.normalize_or_zero();
                 let impulse_dir = (2.0 * dir - current_dir).normalize_or_zero();
-                impulse.impulse = (10.0 * impulse_dir).into();
+                impulse.impulse = 10.0 * impulse_dir;
             }
             PersonState::Standing => {
-                impulse.impulse = (-20.0 * velocity.linvel).into();
+                impulse.impulse = -20.0 * velocity.linvel;
             }
         }
     }

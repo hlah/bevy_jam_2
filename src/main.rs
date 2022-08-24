@@ -19,7 +19,7 @@ fn main() {
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(3.0))
         .add_plugin(ShapePlugin)
         .insert_resource(RapierConfiguration {
-            gravity: Vec2::ZERO.into(),
+            gravity: Vec2::ZERO,
             ..default()
         })
         .add_startup_system(camera::setup)

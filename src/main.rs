@@ -1,4 +1,5 @@
 mod camera;
+mod controls;
 mod person;
 mod player;
 
@@ -17,8 +18,10 @@ fn main() {
         })
         .add_startup_system(camera::setup)
         .add_startup_system(game_setup)
-        .add_system(player::controls)
+        .add_system(controls::player_movement)
+        .add_system(controls::camera_zoom)
         .add_system(person::movement)
+        .add_system(camera::follow_player)
         .run();
 }
 

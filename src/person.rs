@@ -54,12 +54,10 @@ pub fn movement(
     transforms: Query<&Transform>,
     velocities: Query<&Velocity>,
 ) {
-    //info!("=======================");
     for (entity, mut impulse, velocity, person) in persons.iter_mut() {
         match person.state {
             PersonState::Walking(target_dir) => {
                 let current_dir = velocity.linvel.normalize_or_zero();
-                let correction_dir = target_dir - current_dir;
                 let collision_avoidance_dir = calculate_collision_avoidance_dir(
                     entity,
                     target_dir,
@@ -67,12 +65,11 @@ pub fn movement(
                     &transforms,
                     &velocities,
                 );
-                //info!("Collision avoidance dir: {:?}", collision_avoidance_dir);
                 let personal_distance_dir =
                     calculate_personal_space_dir(entity, target_dir, &rapier_ctx, &transforms);
-                let impulse_dir =
-                    (target_dir + correction_dir + collision_avoidance_dir + personal_distance_dir)
-                        .normalize_or_zero();
+                let total_dir = target_dir + collision_avoidance_dir + personal_distance_dir;
+                let correction_dir = (total_dir - current_dir);
+                let impulse_dir = (total_dir + 5.0 * correction_dir).normalize_or_zero();
                 impulse.impulse = 10.0 * impulse_dir;
             }
             PersonState::Standing => {
@@ -105,16 +102,13 @@ fn calculate_collision_avoidance_dir(
         let entity_vel = velocities.get(entity).unwrap().linvel;
         let relative_vel_dir = (collider_vel - entity_vel).normalize_or_zero();
         let mut collider_side_dir = relative_vel_dir.reject_from(target_dir);
-        //info!("Collider side dir: {:?}", collider_side_dir);
         if collider_side_dir.length() < 0.1 {
             let collider_pos = transforms.get(collider_entity).unwrap().translation.xy();
             let collider_relative_pos = current_pos - collider_pos;
             collider_side_dir = -collider_relative_pos.reject_from(target_dir);
-            //info!("DUDUDUDUDUDUDUDUUD: {:?}", collider_side_dir);
         }
         if collider_side_dir.length() < 0.1 {
             collider_side_dir = target_dir.perp();
-            //info!("hahahaahahahahaha: {:?}", collider_side_dir);
         }
 
         -(2.0 * (max_toi - toi.toi) / max_toi + 0.1) * collider_side_dir.normalize()
@@ -148,7 +142,7 @@ fn calculate_personal_space_dir(
                 .exclude_collider(entity),
         ) {
             let dist = toi - 0.4;
-            personal_distance_dir -= 0.1 * ray_dir / (dist * dist);
+            personal_distance_dir -= ray_dir / (dist * dist);
         }
     }
 

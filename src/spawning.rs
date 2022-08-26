@@ -27,10 +27,6 @@ pub fn spawn_person(
         let (to_transform, to_door) = doors.iter().choose(&mut rng).unwrap();
         let spawn_pos = from_transform.translation().xy() + (2.0 * from_door.get_open_dir());
         let target_pos = to_transform.translation().xy() + (2.0 * to_door.get_open_dir());
-        info!(
-            "Spawning person at {:?} with target {:?}!",
-            spawn_pos, target_pos
-        );
         let person_entity =
             person::add_person(&mut commands, &mut meshes, &mut materials, spawn_pos);
         commands.entity(person_entity).insert(Target(target_pos));

@@ -11,6 +11,7 @@ pub fn setup(mut commands: Commands) {
                 scaling_mode: ScalingMode::FixedVertical(100.0),
                 near: -1000.0,
                 far: 1000.0,
+                scale: 2.0,
                 ..default()
             },
             ..default()

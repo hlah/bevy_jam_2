@@ -62,9 +62,10 @@ fn game_setup(
     );
     commands.entity(person_entity).insert(Player);
 
+    //collision_scenario(&mut commands, &mut meshes, &mut materials);
+
     add_roads(&mut commands);
     add_buildings(&mut commands);
-    add_people(&mut commands, &mut meshes, &mut materials);
 }
 
 pub fn add_roads(commands: &mut Commands) {
@@ -156,13 +157,21 @@ pub fn add_buildings(commands: &mut Commands) {
     });
 }
 
-pub fn add_people(
+#[allow(dead_code)]
+fn collision_scenario(
     commands: &mut Commands,
     meshes: &mut Assets<Mesh>,
     materials: &mut Assets<ColorMaterial>,
 ) {
-    let person_entity = add_person(commands, meshes, materials, Vec2::new(62.5, 77.0));
+    let x = -120.0;
+    let x_offset = 0.0;
+    let person_entity = add_person(commands, meshes, materials, Vec2::new(x + x_offset, 60.0));
     commands
         .entity(person_entity)
-        .insert(Target(Vec2::new(-77.0, 62.5)));
+        .insert(Target(Vec2::new(x + x_offset, 20.0)));
+
+    let person_entity = add_person(commands, meshes, materials, Vec2::new(x, 20.0));
+    commands
+        .entity(person_entity)
+        .insert(Target(Vec2::new(x, 60.0)));
 }

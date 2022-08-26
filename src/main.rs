@@ -163,8 +163,8 @@ fn collision_scenario(
     meshes: &mut Assets<Mesh>,
     materials: &mut Assets<ColorMaterial>,
 ) {
-    let x = -120.0;
-    let x_offset = 0.0;
+    let x = 77.0;
+    let x_offset = -0.1;
     let person_entity = add_person(commands, meshes, materials, Vec2::new(x + x_offset, 60.0));
     commands
         .entity(person_entity)

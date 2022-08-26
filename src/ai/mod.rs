@@ -29,6 +29,10 @@ impl Actions {
     fn next(&mut self) {
         self.current_step += 1;
     }
+
+    fn peek(&self) -> Option<&Action> {
+        self.steps.get(self.current_step + 1)
+    }
 }
 
 impl From<Vec<Action>> for Actions {
@@ -64,13 +68,33 @@ pub fn person_actions(
     }
 }
 
-pub fn path_update(mut paths: Query<(&Transform, &mut Actions)>) {
-    for (person_transform, mut path) in paths.iter_mut() {
-        let finished_step = if let Some(step) = path.current() {
+pub fn path_update(
+    rapier_ctx: Res<RapierContext>,
+    mut transform_and_actions: Query<(&Transform, &mut Actions)>,
+) {
+    for (person_transform, mut actions) in transform_and_actions.iter_mut() {
+        let finished_step = if let Some(step) = actions.current() {
             match step {
                 Action::GoTo(target) => {
-                    let distance = target.distance(person_transform.translation.xy());
-                    distance < 0.5
+                    let pos = person_transform.translation.xy();
+
+                    if let Some(Action::GoTo(next_target)) = actions.peek() {
+                        let displacement = *next_target - pos;
+
+                        let distance = displacement.length();
+                        let dir = displacement.normalize_or_zero();
+                        let result = rapier_ctx.cast_shape(
+                            pos,
+                            0.0,
+                            dir,
+                            &Collider::cuboid(0.5, 0.5),
+                            distance,
+                            QueryFilter::only_fixed(),
+                        );
+                        result.is_none()
+                    } else {
+                        pos.distance(*target) < 0.5
+                    }
                 }
                 _ => false,
             }
@@ -78,7 +102,7 @@ pub fn path_update(mut paths: Query<(&Transform, &mut Actions)>) {
             false
         };
         if finished_step {
-            path.next();
+            actions.next();
         }
     }
 }

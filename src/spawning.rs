@@ -1,4 +1,8 @@
-use crate::{ai::Target, building::Door, person};
+use crate::{
+    ai::{BuildPath, Target},
+    building::Door,
+    person,
+};
 use bevy::{math::Vec3Swizzles, prelude::*, utils::Duration};
 use rand::seq::IteratorRandom;
 
@@ -29,6 +33,9 @@ pub fn spawn_person(
         let target_pos = to_transform.translation().xy() + (2.0 * to_door.get_open_dir());
         let person_entity =
             person::add_person(&mut commands, &mut meshes, &mut materials, spawn_pos);
-        commands.entity(person_entity).insert(Target(target_pos));
+        commands
+            .entity(person_entity)
+            .insert(Target(target_pos))
+            .insert(BuildPath);
     }
 }

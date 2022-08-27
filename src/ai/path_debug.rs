@@ -15,7 +15,6 @@ pub fn path_debug(
     changed_paths: Query<(Entity, &Actions, Option<&PathDebugRef>), Changed<Actions>>,
 ) {
     for (entity, path, path_debug) in changed_paths.iter() {
-        info!("Debug path for {:?}: {:?}", entity, path);
         if let Some(path_debug) = path_debug {
             commands.entity(**path_debug).despawn();
         }
@@ -24,7 +23,6 @@ pub fn path_debug(
         for (from, to) in path
             .remaining()
             .filter_map(|action| {
-                info!("> {:?}", action);
                 if let Action::GoTo(target) = action {
                     Some(target)
                 } else {

@@ -44,8 +44,11 @@ impl From<Vec<Action>> for Actions {
     }
 }
 
-#[derive(Component, Deref)]
+#[derive(Component, Deref, Debug)]
 pub struct Target(pub Vec2);
+
+#[derive(Component, Debug)]
+pub struct BuildPath;
 
 pub fn person_actions(
     mut commands: Commands,
@@ -69,66 +72,92 @@ pub fn person_actions(
 }
 
 pub fn path_update(
+    mut commands: Commands,
     rapier_ctx: Res<RapierContext>,
-    mut transform_and_actions: Query<(&Transform, &mut Actions)>,
+    mut transform_and_actions: Query<(Entity, &Transform, &mut Actions)>,
 ) {
-    for (person_transform, mut actions) in transform_and_actions.iter_mut() {
-        let finished_step = if let Some(step) = actions.current() {
-            match step {
-                Action::GoTo(target) => {
-                    let pos = person_transform.translation.xy();
+    for (entity, transform, mut actions) in transform_and_actions.iter_mut() {
+        rebuild_actions_if_stuck(&mut commands, &rapier_ctx, entity, transform, &mut actions);
+        check_step_finshed(&rapier_ctx, transform, &mut actions);
+    }
+}
 
-                    if let Some(Action::GoTo(next_target)) = actions.peek() {
-                        let displacement = *next_target - pos;
+fn check_step_finshed(rapier_ctx: &RapierContext, transform: &Transform, actions: &mut Actions) {
+    let finished_step = if let Some(Action::GoTo(target)) = actions.current() {
+        let pos = transform.translation.xy();
 
-                        let distance = displacement.length();
-                        let dir = displacement.normalize_or_zero();
-                        let result = rapier_ctx.cast_shape(
-                            pos,
-                            0.0,
-                            dir,
-                            &Collider::cuboid(0.5, 0.5),
-                            distance,
-                            QueryFilter::only_fixed(),
-                        );
-                        result.is_none()
-                    } else {
-                        pos.distance(*target) < 0.5
-                    }
-                }
-                _ => false,
-            }
+        if let Some(Action::GoTo(next_target)) = actions.peek() {
+            let displacement = *next_target - pos;
+
+            let distance = displacement.length();
+            let dir = displacement.normalize_or_zero();
+            let result = rapier_ctx.cast_shape(
+                pos,
+                0.0,
+                dir,
+                &Collider::cuboid(0.5, 0.5),
+                distance,
+                QueryFilter::only_fixed(),
+            );
+            result.is_none()
         } else {
-            false
-        };
-        if finished_step {
-            actions.next();
+            pos.distance(*target) < 0.5
         }
+    } else {
+        false
+    };
+    if finished_step {
+        actions.next();
+    }
+}
+
+fn rebuild_actions_if_stuck(
+    commands: &mut Commands,
+    rapier_ctx: &RapierContext,
+    entity: Entity,
+    transform: &Transform,
+    actions: &mut Actions,
+) {
+    let rebuild = if let Some(Action::GoTo(target)) = actions.current() {
+        let pos = transform.translation.xy();
+        let displacement = *target - pos;
+        let distance = displacement.length();
+        let dir = displacement.normalize_or_zero();
+        let result = rapier_ctx.cast_shape(
+            pos,
+            0.0,
+            dir,
+            &Collider::cuboid(0.5, 0.5),
+            distance,
+            QueryFilter::only_fixed(),
+        );
+        result.is_some()
+    } else {
+        false
+    };
+    if rebuild {
+        info!("Rebuilding path for {:?}", entity);
+        commands.entity(entity).insert(BuildPath);
     }
 }
 
 pub fn build_path(
     mut commands: Commands,
     rapier_ctx: Res<RapierContext>,
-    with_target: Query<(Entity, &Transform, &Target)>,
+    to_build: Query<(Entity, &Transform, &Target), With<BuildPath>>,
 ) {
-    for (entity, transform, target) in with_target.iter() {
+    for (entity, transform, target) in to_build.iter() {
         let mut actions = vec![];
         let from = transform.translation.xy();
         let raw_path = search::search_path(&rapier_ctx, from, **target).unwrap();
         let simplified_path = path_simplification(&rapier_ctx, raw_path);
-        actions.extend(
-            simplified_path
-                .into_iter()
-                .map(|target| Action::GoTo(target)),
-        );
+        actions.extend(simplified_path.into_iter().map(Action::GoTo));
         actions.push(Action::Despawn);
 
-        info!("{:?} actions: {:?}", entity, actions);
         commands
             .entity(entity)
             .insert(Actions::from(actions))
-            .remove::<Target>();
+            .remove::<BuildPath>();
     }
 }
 

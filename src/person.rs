@@ -2,7 +2,6 @@ use std::f32::consts::PI;
 
 use bevy::{math::Vec3Swizzles, prelude::*, sprite::MaterialMesh2dBundle};
 use bevy_rapier2d::prelude::*;
-use rand::Rng;
 
 #[derive(Component, Default)]
 pub struct Person {
@@ -68,8 +67,8 @@ pub fn movement(
                 let personal_distance_dir =
                     calculate_personal_space_dir(entity, target_dir, &rapier_ctx, &transforms);
                 let total_dir = target_dir + collision_avoidance_dir + personal_distance_dir;
-                let correction_dir = (total_dir - current_dir);
-                let impulse_dir = (total_dir + 5.0 * correction_dir).normalize_or_zero();
+                let correction_dir = total_dir - current_dir;
+                let impulse_dir = (total_dir + 2.0 * correction_dir).normalize_or_zero();
                 impulse.impulse = 10.0 * impulse_dir;
             }
             PersonState::Standing => {
